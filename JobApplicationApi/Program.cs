@@ -34,8 +34,12 @@ builder.Services.AddSwaggerGen(c =>
             Array.Empty<string>()
         }
     });
-}); 
-builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlite("Data Source=jobapplications.db"));
+});
+var dbPath = builder.Configuration["Database:Path"] ?? "jobapplications.db";
+var dbDir = Path.GetDirectoryName(Path.GetFullPath(dbPath));
+if (!string.IsNullOrEmpty(dbDir)) Directory.CreateDirectory(dbDir);
+builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlite($"Data Source={dbPath}"));
+
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
 
 builder.Services.AddScoped<TokenService>();
@@ -85,11 +89,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.UseCors("web");
 
 app.UseAuthorization();
 
 app.MapControllers();
-
+app.MapFallbackToFile("index.html");
 app.Run();
